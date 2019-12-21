@@ -1,13 +1,13 @@
 var express = require('express')
 var app = express()
-var mysql = require('mysql')
+// var mysql = require('mysql')
 
-var con = mysql.createConnection({
-	host     : 'localhost',
-	user     : 'top4ek',
-	password : 'q2w3e4r5',
-	database : 'food'
-});
+// var con = mysql.createConnection({
+// 	host     : 'localhost',
+// 	user     : 'top4ek',
+// 	password : 'q2w3e4r5',
+// 	database : 'food'
+// });
 
 var data = `[
   {
@@ -1171,41 +1171,69 @@ var data = `[
   }
 ]`;
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+var {MongoClient, ObjectID} = require("mongodb")
+var URL = "mongodb://localhost:27017"
+var DB_NAME = "chpok_db"
+
 app.get('/insert', (req, res) => {
   var jir = req.query.jir,
       uglevod = req.query.uglevod,
       belki = req.query.belki,
       kalorii = req.query.kalorii;
   console.log(jir);
-  con.query("INSERT INTO `users`(`jir`, `uglevod`, `belki`, `kalorii`) VALUES ("+jir+", "+uglevod+", "+belki+", "+kalorii+")", (err, result, fields) => {
-  	console.log(result.insertId);
-		res.send(JSON.stringify(result.insertId))
+  MongoClient.connect(URL, (err, db) => {
+    if(err) throw err;
+    var dbo = db.db(DB_NAME)
+    dbo.collection("users").insertOne(req.query, (err, result) => {
+      if(err) throw err;
+      res.json({
+        type: "ok",
+        id: result.ops[0]._id
+      })
+    })
   })
+  // con.query("INSERT INTO `users`(`jir`, `uglevod`, `belki`, `kalorii`) VALUES ("+jir+", "+uglevod+", "+belki+", "+kalorii+")", (err, result, fields) => {
+  // 	console.log(result.insertId);
+	// 	res.send(JSON.stringify(result.insertId))
+  // })
 })
 
 app.get('/data', (req,res) => {
-	var id = req.query.id
-	con.query("SELECT * FROM users WHERE id = "+id, (err, result, fields) => {
-		// 50, 10, 60, 1200
-		var json = JSON.parse(data)
-		var jir = 0,
-	      uglevod = 0,
-	      belki = 0;
-		var kalorii = result[0].kalorii
-		var count = 0;
-		var product = []
-		while(count < kalorii){
-			var rand = randomInteger(0, json.length-1)
-			console.log(json[rand].food_name);
-			jir += json[rand].total_fat
-			uglevod += json[rand].total_carbohydrate
-			belki += json[rand].Protein
-			count += json[rand].Calories
-			product.push(json[rand])
-		}
-		console.log(count, kalorii);
-		res.send(JSON.stringify(product))
-	})
+  var id = req.query.id
+  MongoClient.connect(URL, (err, db) => {
+    if(err) throw err;
+    var dbo = db.db(DB_NAME)
+    dbo.collection("users").findOne({_id: ObjectID(id)}, (err, result) => {
+      var json = JSON.parse(data)
+  		var jir = 0,
+  	      uglevod = 0,
+  	      belki = 0;
+  		var kalorii = result.kalorii
+  		var count = 0;
+  		var product = []
+  		while(count < kalorii){
+  			var rand = randomInteger(0, json.length-1)
+  			console.log(json[rand].food_name);
+  			jir += json[rand].total_fat
+  			uglevod += json[rand].total_carbohydrate
+  			belki += json[rand].Protein
+  			count += json[rand].Calories
+  			product.push(json[rand])
+  		}
+  		console.log(count, kalorii);
+  		res.json(product)
+    })
+  })
+	// con.query("SELECT * FROM users WHERE id = "+id, (err, result, fields) => {
+	// 	// 50, 10, 60, 1200
+		
+	// })
 })
 
 app.get('/change_product', (req, res) => {

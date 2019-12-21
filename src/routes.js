@@ -5,7 +5,6 @@ import DynamicRoutePage from './components/pages/DynamicRoutePage';
 import NotFoundPage from './components/pages/NotFoundPage';
 import PanelLeftPage from './components/pages/PanelLeftPage';
 import PanelRightPage from './components/pages/PanelRightPage';
-import ProductInfo from './components/pages/ProductInfo';
 
 export default [
   {
@@ -27,10 +26,6 @@ export default [
   {
     path: '/form/',
     component: FormPage,
-  },
-  {
-    path: '/product-info/',
-    component: ProductInfo,
   },
   {
     path: '/dynamic-route/blog/:blogId/post/:postId/',

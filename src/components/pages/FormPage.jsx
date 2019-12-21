@@ -22,6 +22,8 @@ import {
   Col
 } from 'framework7-react';
 
+import not_found_image from './not.png'
+
 const numbers = [1, 2, 3, 4, 5];
 const listItems = numbers.map((number) =>
   <li>{number}</li>
@@ -47,35 +49,47 @@ export default class extends React.Component {
         popupOpened: false,
       }
     }
+    async function getImgae (name, index){
+      const rawResponse = await fetch(`https://pixabay.com/api/?key=14692501-48f4193959b15584fe38ac0eb&q=${name}&lang=ru&category=food`);
+      const content = await rawResponse.json();
+      // console.log(content.hits[0].webformatURL);
+      var json_products = JSON.parse(localStorage.getItem("products"))
+      json_products[index].image = content.hits.length > 0 ? content.hits[0].webformatURL : not_found_image
+      localStorage.setItem("products", JSON.stringify(json_products))
+    }
     if(localStorage.getItem('status')){
       if(localStorage.getItem('id') && localStorage.getItem('status') == 'generate_product'){
         fetch('http://localhost:1337/data?id='+localStorage.getItem('id'), {mode: 'cors'})
-        .then(response => response.text())
+        .then(response => response.json())
         .then((body) => {
-          console.log(body);
-          localStorage.setItem('products', body);
+          localStorage.setItem('products', JSON.stringify(body));
+          for (let i = 0; i < body.length; i++) {
+            getImgae(body[i].food_name, i)
+          }
           localStorage.setItem('status', 'work');
         });
       }
+      if(localStorage.getItem('id') && localStorage.getItem('status') == 'work'){
+        var products = JSON.parse(localStorage.getItem('products'))
+        items = products.map((number, index) =>
+          <ListItem
+            swipeout
+            onSwipeoutDeleted={this.onDeleted.bind(this)}
+            link="/product-info/"
+            title={number.food_name}
+            after="20 ₽"
+            subtitle={"Калорий: "+number.Calories}
+            text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla sagittis tellus ut turpis condimentum, ut dignissim lacus tincidunt. Cras dolor metus, ultrices condimentum sodales sit amet, pharetra sodales eros. Phasellus vel felis tellus. Mauris rutrum ligula nec dapibus feugiat. In vel dui laoreet, commodo augue id, pulvinar lacus."
+            ref={(ref) => this.asd[index] = ref}
+          >
+            <SwipeoutActions right>
+              <SwipeoutButton color="red" onClick={this.onDeleted.bind(this, number, index)}>Заменить</SwipeoutButton>
+            </SwipeoutActions>
+            <img slot='media' src={number.image} width='80' />
+          </ListItem>
+        )
+      }
     }
-    var products = JSON.parse(localStorage.getItem('products'))
-    items = products.map((number, index) =>
-      <ListItem
-        swipeout
-        onSwipeoutDeleted={this.onDeleted.bind(this)}
-        link="/product-info/"
-        title={number.food_name}
-        after="20 ₽"
-        subtitle={number.Calories}
-        text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla sagittis tellus ut turpis condimentum, ut dignissim lacus tincidunt. Cras dolor metus, ultrices condimentum sodales sit amet, pharetra sodales eros. Phasellus vel felis tellus. Mauris rutrum ligula nec dapibus feugiat. In vel dui laoreet, commodo augue id, pulvinar lacus."
-        ref={(ref) => this.asd[index] = ref}
-      >
-        <SwipeoutActions right>
-          <SwipeoutButton color="red" onClick={this.onDeleted.bind(this, number, index)}>Заменить</SwipeoutButton>
-        </SwipeoutActions>
-        <img slot='media' src='https://pbs.twimg.com/profile_images/425274582581264384/X3QXBN8C.jpeg' width='80' />
-      </ListItem>
-    )
     // const element = (
     //   <div>
     //     <h1>Hello, world!</h1>
@@ -87,16 +101,17 @@ export default class extends React.Component {
   }
 
   enterData(){
-    var jir = this.jir.current.state.currentInputValue,
-        uglevod = this.uglevod.current.state.currentInputValue,
-        belki = this.belki.current.state.currentInputValue,
-        kalorii = this.kalorii.current.state.currentInputValue;
-    // console.log(jir);
+    var jir = this.jir.current.__reactRefs.inputEl.value,
+        uglevod = this.uglevod.current.__reactRefs.inputEl.value,
+        belki = this.belki.current.__reactRefs.inputEl.value,
+        kalorii = this.kalorii.current.__reactRefs.inputEl.value;
+    console.log(jir);
+    console.log('http://localhost:1337/insert?jir='+jir+'&uglevod='+uglevod+'&belki='+belki+'&kalorii='+kalorii)
     fetch('http://localhost:1337/insert?jir='+jir+'&uglevod='+uglevod+'&belki='+belki+'&kalorii='+kalorii, {mode: 'cors'})
-    .then(response => response.text())
+    .then(response => response.json())
     .then((body) => {
       console.log(body);
-      localStorage.setItem('id', JSON.stringify(body))
+      localStorage.setItem('id', body.id)
       localStorage.setItem('status', 'generate_product');
       window.location.reload();
     });
