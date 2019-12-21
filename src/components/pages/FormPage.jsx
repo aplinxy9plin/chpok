@@ -59,7 +59,7 @@ export default class extends React.Component {
     }
     if(localStorage.getItem('status')){
       if(localStorage.getItem('id') && localStorage.getItem('status') == 'generate_product'){
-        fetch('http://localhost:1337/data?id='+localStorage.getItem('id'), {mode: 'cors'})
+        fetch('https://chpok-backend.herokuapp.com/data?id='+localStorage.getItem('id'), {mode: 'cors'})
         .then(response => response.json())
         .then((body) => {
           localStorage.setItem('products', JSON.stringify(body));
@@ -106,8 +106,8 @@ export default class extends React.Component {
         belki = this.belki.current.__reactRefs.inputEl.value,
         kalorii = this.kalorii.current.__reactRefs.inputEl.value;
     console.log(jir);
-    console.log('http://localhost:1337/insert?jir='+jir+'&uglevod='+uglevod+'&belki='+belki+'&kalorii='+kalorii)
-    fetch('http://localhost:1337/insert?jir='+jir+'&uglevod='+uglevod+'&belki='+belki+'&kalorii='+kalorii, {mode: 'cors'})
+    console.log('https://chpok-backend.herokuapp.com/insert?jir='+jir+'&uglevod='+uglevod+'&belki='+belki+'&kalorii='+kalorii)
+    fetch('https://chpok-backend.herokuapp.com/insert?jir='+jir+'&uglevod='+uglevod+'&belki='+belki+'&kalorii='+kalorii, {mode: 'cors'})
     .then(response => response.json())
     .then((body) => {
       console.log(body);
@@ -127,7 +127,7 @@ export default class extends React.Component {
       if(products[i].food_name == this.asd[index].props.title){
         var cals = products[i].Calories,
             name = products[i].food_name
-        fetch('http://localhost:1337/change_product?kalorii='+cals+'&name='+name, {mode: 'cors'})
+        fetch('https://chpok-backend.herokuapp.com/change_product?kalorii='+cals+'&name='+name, {mode: 'cors'})
         .then(response => response.text())
         .then((body) => {
           products.splice(index, 1, JSON.parse(body))
